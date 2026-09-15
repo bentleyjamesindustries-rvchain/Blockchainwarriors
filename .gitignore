@@ -1,0 +1,16 @@
+node_modules
+.tanstack
+.vercel
+.grok
+.project_id
+.node_modules.lock
+screenshots
+artifacts
+attachments
+doge-trading-bot
+*.log
+.DS_Store
+dist
+.output
+.env
+.env.local

@@ -2,7 +2,7 @@
 
 Educational paper desk for **Bitcoin** and **Dogecoin**. Live quotes. No live orders.
 
-This repository is independent of RV-CHAIN. It is a separate paper-trading desk.
+This repo is **not** RV-CHAIN. It is a separate paper-trading desk.
 
 ## What it does
 
