@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --color-background: #07080a;
+  --color-foreground: #e6e4dc;
+  --color-card: #111318;
+  --color-card-foreground: #e6e4dc;
+  --color-primary: #9aabba;
+  --color-primary-foreground: #07080a;
+  --color-secondary: #1a1e26;
+  --color-muted-foreground: #8b9088;
+  --color-border: #23282f;
+  --color-long: #3f9d72;
+  --color-short: #c45c4a;
+  --color-wait: #c4a574;
+  --radius: 0.75rem;
+}
+
+@layer base {
+  html, body, #app {
+    min-height: 100%;
+    background: var(--color-background);
+    color: var(--color-foreground);
+  }
+  body { font-family: var(--font-sans); }
+  * { border-color: var(--color-border); }
+}
