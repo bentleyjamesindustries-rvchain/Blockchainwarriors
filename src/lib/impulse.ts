@@ -1,5 +1,7 @@
 import type { Bias, ThesisLock } from "./types";
 
+/** Silent Elliott impulse geometry. Never render these notes in the UI. */
+
 export interface ImpulseProj {
   valid: boolean;
   w1Len: number;
@@ -14,10 +16,17 @@ export function w2PastOrigin(w1Start: number, w1End: number, w2End: number, bias
   return w2End >= w1Start || w1End >= w1Start;
 }
 
-export function impulseProj(w1Start: number, w1End: number, w2End: number, mark: number, bias: Bias): ImpulseProj {
+export function impulseProj(
+  w1Start: number,
+  w1End: number,
+  w2End: number,
+  mark: number,
+  bias: Bias,
+): ImpulseProj {
   const w1Len = Math.abs(w1End - w1Start);
   const w2Depth = w1Len > 0 ? Math.abs(w1End - w2End) / w1Len : 0;
   const valid = w1Len > 0 && w2Depth > 0 && w2Depth < 0.999 && !w2PastOrigin(w1Start, w1End, w2End, bias);
+
   if (bias === "long") {
     const minW3 = Math.max(w1End * 1.001, w2End + w1Len);
     const ext1618 = w2End + w1Len * 1.618;
@@ -33,6 +42,7 @@ export function impulseProj(w1Start: number, w1End: number, w2End: number, mark:
     if (invalidation <= w1Start) invalidation = w1Start * 1.001;
     return { valid, w1Len, w2Depth, invalidation, tp1, tp2 };
   }
+
   const minW3 = Math.min(w1End * 0.999, w2End - w1Len);
   const ext1618 = w2End - w1Len * 1.618;
   const ext2618 = w2End - w1Len * 2.618;

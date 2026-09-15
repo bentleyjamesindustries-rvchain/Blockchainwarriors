@@ -15,7 +15,11 @@ const SheetContent = React.forwardRef<
     <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-background/70" />
     <DialogPrimitive.Content
       ref={ref}
-      className={cn("fixed z-50 flex h-full w-72 flex-col border-border bg-card p-4", side === "left" ? "top-0 left-0 border-r" : "top-0 right-0 border-l", className)}
+      className={cn(
+        "fixed z-50 flex h-full w-72 flex-col border-border bg-card p-4",
+        side === "left" ? "top-0 left-0 border-r" : "top-0 right-0 border-l",
+        className,
+      )}
       {...props}
     >
       {children}

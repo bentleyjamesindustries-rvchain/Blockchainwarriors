@@ -131,6 +131,7 @@ export interface DeskSettings {
 
 export const DESK_MODES = ["long", "short", "diamond"] as const;
 export type DeskMode = (typeof DESK_MODES)[number];
+
 export type Actionable = "take" | "wait" | "sit";
 
 export interface Opportunity {

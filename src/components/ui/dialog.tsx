@@ -12,7 +12,11 @@ const DialogOverlay = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay ref={ref} className={cn("fixed inset-0 z-50 bg-background/80", className)} {...props} />
+  <DialogPrimitive.Overlay
+    ref={ref}
+    className={cn("fixed inset-0 z-50 bg-background/80 data-[state=open]:animate-in data-[state=closed]:animate-out", className)}
+    {...props}
+  />
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
@@ -25,11 +29,15 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-6",
+        "fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-6 shadow-[0_0_0_1px_rgba(255,255,255,0.04)] duration-200",
         className,
       )}
-      onPointerDownOutside={(e) => { if (hideClose) e.preventDefault(); }}
-      onEscapeKeyDown={(e) => { if (hideClose) e.preventDefault(); }}
+      onPointerDownOutside={(e) => {
+        if (hideClose) e.preventDefault();
+      }}
+      onEscapeKeyDown={(e) => {
+        if (hideClose) e.preventDefault();
+      }}
       {...props}
     >
       {children}

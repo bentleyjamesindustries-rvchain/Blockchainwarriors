@@ -11,8 +11,12 @@ export interface LiveMark {
 
 async function stats(product: SymbolId): Promise<LiveMark> {
   const [tickRes, statRes] = await Promise.all([
-    fetch(`https://api.exchange.coinbase.com/products/${product}/ticker`, { headers: { accept: "application/json" } }),
-    fetch(`https://api.exchange.coinbase.com/products/${product}/stats`, { headers: { accept: "application/json" } }),
+    fetch(`https://api.exchange.coinbase.com/products/${product}/ticker`, {
+      headers: { accept: "application/json" },
+    }),
+    fetch(`https://api.exchange.coinbase.com/products/${product}/stats`, {
+      headers: { accept: "application/json" },
+    }),
   ]);
   if (!tickRes.ok) throw new Error(`coinbase ticker ${tickRes.status}`);
   const tick = (await tickRes.json()) as { price?: string };

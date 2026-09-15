@@ -11,9 +11,35 @@ function JournalPage() {
   const reset = useDeskStore((s) => s.resetPaper);
 
   function exportCsv() {
-    const header = ["closed", "symbol", "bias", "wave", "entry", "exit", "size", "pnl", "r", "reason", "tags", "notes"];
+    const header = [
+      "closed",
+      "symbol",
+      "bias",
+      "wave",
+      "entry",
+      "exit",
+      "size",
+      "pnl",
+      "r",
+      "reason",
+      "tags",
+      "notes",
+    ];
     const rows = journal.map((j) =>
-      [new Date(j.closedAt).toISOString(), j.symbol, j.bias, j.waveRole, j.entry, j.exit, j.size, j.pnl, j.rMultiple, j.reason, j.confluenceTags.join("|"), j.notes.replaceAll(",", ";")].join(","),
+      [
+        new Date(j.closedAt).toISOString(),
+        j.symbol,
+        j.bias,
+        j.waveRole,
+        j.entry,
+        j.exit,
+        j.size,
+        j.pnl,
+        j.rMultiple,
+        j.reason,
+        j.confluenceTags.join("|"),
+        j.notes.replaceAll(",", ";"),
+      ].join(","),
     );
     const blob = new Blob([[header.join(","), ...rows].join("\n")], { type: "text/csv" });
     const a = document.createElement("a");
@@ -35,15 +61,19 @@ function JournalPage() {
           <h1 className="text-2xl font-medium tracking-tight">Journal</h1>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={exportCsv} disabled={!journal.length}>Export CSV</Button>
-          <Button variant="ghost" size="sm" onClick={reset}>Reset paper book</Button>
+          <Button variant="outline" size="sm" onClick={exportCsv} disabled={!journal.length}>
+            Export CSV
+          </Button>
+          <Button variant="ghost" size="sm" onClick={reset}>
+            Reset paper book
+          </Button>
         </div>
       </header>
       <p className="font-mono text-sm text-muted-foreground">
-        {journal.length} fills · win {(wr * 100).toFixed(0)}% · avg {avgR.toFixed(2)}R
+        {journal.length} fills · win { (wr * 100).toFixed(0)}% · avg {avgR.toFixed(2)}R
       </p>
       {journal.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No fills yet.</p>
+        <p className="text-sm text-muted-foreground">No fills yet. Arm a lock on the chart desk and wait for reclaim, or paper-fill to rehearse the lifecycle.</p>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full min-w-[720px] text-left text-sm">
@@ -64,7 +94,9 @@ function JournalPage() {
                 <tr key={j.id} className="border-t border-border">
                   <td className="px-3 py-2 text-xs text-muted-foreground">{formatTime(j.closedAt)}</td>
                   <td className="px-3 py-2">{displaySymbol(j.symbol)}</td>
-                  <td className="px-3 py-2">{j.bias}</td>
+                  <td className="px-3 py-2">
+                    {j.bias}
+                  </td>
                   <td className="px-3 py-2 font-mono">{formatPrice(j.entry, j.symbol)}</td>
                   <td className="px-3 py-2 font-mono">{formatPrice(j.exit, j.symbol)}</td>
                   <td className={j.pnl >= 0 ? "px-3 py-2 text-long" : "px-3 py-2 text-short"}>{formatUsd(j.pnl)}</td>

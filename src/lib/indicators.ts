@@ -29,7 +29,9 @@ export function atr(candles: Candle[], period = 14): number[] {
   for (let i = 0; i < candles.length; i++) {
     const c = candles[i]!;
     const prev = candles[i - 1];
-    const tr = prev ? Math.max(c.high - c.low, Math.abs(c.high - prev.close), Math.abs(c.low - prev.close)) : c.high - c.low;
+    const tr = prev
+      ? Math.max(c.high - c.low, Math.abs(c.high - prev.close), Math.abs(c.low - prev.close))
+      : c.high - c.low;
     trs.push(tr);
   }
   return sma(trs, period);
@@ -41,24 +43,87 @@ export function last<T>(arr: T[]): T | null {
 
 export function swingHigh(candles: Candle[], lookback = 20): number | null {
   if (!candles.length) return null;
-  return candles.slice(-lookback).reduce((m, c) => Math.max(m, c.high), -Infinity);
+  const slice = candles.slice(-lookback);
+  return slice.reduce((m, c) => Math.max(m, c.high), -Infinity);
 }
 
 export function swingLow(candles: Candle[], lookback = 20): number | null {
   if (!candles.length) return null;
-  return candles.slice(-lookback).reduce((m, c) => Math.min(m, c.low), Infinity);
+  const slice = candles.slice(-lookback);
+  return slice.reduce((m, c) => Math.min(m, c.low), Infinity);
 }
 
 export function returnN(candles: Candle[], n: number): number {
   if (candles.length < n + 1) return 0;
   const a = candles[candles.length - 1 - n]!.close;
   const b = candles[candles.length - 1]!.close;
-  return a === 0 ? 0 : (b - a) / a;
+  if (a === 0) return 0;
+  return (b - a) / a;
 }
 
-export function impulseChannel(p: { w1Start: number; w1End: number; w2End: number }) {
-  const offset = p.w1End - p.w1Start;
-  return { baseA: p.w1Start, baseB: p.w2End, parallelA: p.w1Start + offset, parallelB: p.w2End + offset, medianA: p.w1Start + offset / 2, medianB: p.w2End + offset / 2 };
+export function adxLike(candles: Candle[], period = 14): number {
+  if (candles.length < period + 2) return 0;
+  let up = 0;
+  let down = 0;
+  const slice = candles.slice(-period - 1);
+  for (let i = 1; i < slice.length; i++) {
+    const dp = slice[i]!.high - slice[i - 1]!.high;
+    const dm = slice[i - 1]!.low - slice[i]!.low;
+    if (dp > dm && dp > 0) up += dp;
+    if (dm > dp && dm > 0) down += dm;
+  }
+  const sum = up + down;
+  if (sum === 0) return 0;
+  return Math.abs(up - down) / sum;
+}
+
+export function isChop(candles: Candle[]): boolean {
+  if (candles.length < 30) return false;
+  const a = atr(candles, 14);
+  const lastAtr = last(a) ?? 0;
+  const prior = a.slice(-40, -14);
+  const mean = prior.length ? prior.reduce((s, v) => s + v, 0) / prior.length : lastAtr;
+  const compressed = mean > 0 && lastAtr < mean * 0.65;
+  const trend = adxLike(candles, 14);
+  return compressed && trend < 0.18;
+}
+
+export interface VolumeProfile {
+  poc: number;
+  hvn: number[];
+  lvn: number[];
+  bins: { price: number; volume: number }[];
+}
+
+export function volumeProfile(candles: Candle[], bins = 24): VolumeProfile | null {
+  if (candles.length < 8) return null;
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const c of candles) {
+    lo = Math.min(lo, c.low);
+    hi = Math.max(hi, c.high);
+  }
+  if (!(hi > lo)) return null;
+  const width = (hi - lo) / bins;
+  const vol = new Array(bins).fill(0) as number[];
+  for (const c of candles) {
+    const mid = (c.high + c.low + c.close) / 3;
+    const i = Math.min(bins - 1, Math.max(0, Math.floor((mid - lo) / width)));
+    vol[i] += c.volume || Math.abs(c.close - c.open) || 1;
+  }
+  let pocIdx = 0;
+  for (let i = 1; i < bins; i++) if (vol[i]! > vol[pocIdx]!) pocIdx = i;
+  const mean = vol.reduce((s, v) => s + v, 0) / bins;
+  const hvn: number[] = [];
+  const lvn: number[] = [];
+  const rows: { price: number; volume: number }[] = [];
+  for (let i = 0; i < bins; i++) {
+    const price = lo + (i + 0.5) * width;
+    rows.push({ price, volume: vol[i]! });
+    if (vol[i]! >= mean * 1.35) hvn.push(price);
+    if (vol[i]! <= mean * 0.45) lvn.push(price);
+  }
+  return { poc: lo + (pocIdx + 0.5) * width, hvn, lvn, bins: rows };
 }
 
 export function fibRetrace(start: number, end: number, ratio: number): number {
@@ -71,50 +136,69 @@ export function measuredImpulse(pivots: { w1Start: number; w1End: number; w2End:
   return { impulse, depth };
 }
 
+/** Impulse channel: origin (W1 start) → W2 end, parallel through W1 end. */
+export function impulseChannel(p: { w1Start: number; w1End: number; w2End: number }) {
+  const lowerA = p.w1Start;
+  const lowerB = p.w2End;
+  const offset = p.w1End - p.w1Start;
+  return {
+    baseA: lowerA,
+    baseB: lowerB,
+    parallelA: lowerA + offset,
+    parallelB: lowerB + offset,
+    medianA: lowerA + offset / 2,
+    medianB: lowerB + offset / 2,
+  };
+}
+
+/** Andrews pitchfork from A=W1 start, B=W1 end, C=W2 end. */
+export function pitchfork(p: { w1Start: number; w1End: number; w2End: number }) {
+  const mid = (p.w1End + p.w2End) / 2;
+  return {
+    medianStart: p.w1Start,
+    medianEnd: mid,
+    upper: p.w1End,
+    lower: p.w2End,
+  };
+}
+
 export function near(price: number, level: number, atrVal: number, k = 0.35): boolean {
   if (!Number.isFinite(price) || !Number.isFinite(level)) return false;
-  return Math.abs(price - level) <= Math.max(atrVal * k, Math.abs(level) * 0.002);
+  const tol = Math.max(atrVal * k, Math.abs(level) * 0.002);
+  return Math.abs(price - level) <= tol;
 }
 
 export function between(price: number, a: number, b: number): boolean {
-  return price >= Math.min(a, b) && price <= Math.max(a, b);
+  const lo = Math.min(a, b);
+  const hi = Math.max(a, b);
+  return price >= lo && price <= hi;
 }
 
-export function isChop(candles: Candle[]): boolean {
-  if (candles.length < 30) return false;
-  const a = atr(candles, 14);
-  const lastAtr = last(a) ?? 0;
-  const prior = a.slice(-40, -14);
-  const mean = prior.length ? prior.reduce((s, v) => s + v, 0) / prior.length : lastAtr;
-  return mean > 0 && lastAtr < mean * 0.65;
+export function closesAbove(candles: Candle[], level: number, n = 1): boolean {
+  const slice = candles.slice(-n);
+  return slice.length > 0 && slice.every((c) => c.close > level);
+}
+
+export function closesBelow(candles: Candle[], level: number, n = 1): boolean {
+  const slice = candles.slice(-n);
+  return slice.length > 0 && slice.every((c) => c.close < level);
 }
 
 export function taggedBand(candles: Candle[], lo: number, hi: number, lookback = 8): boolean {
-  const a = Math.min(lo, hi); const b = Math.max(lo, hi);
+  const a = Math.min(lo, hi);
+  const b = Math.max(lo, hi);
   return candles.slice(-lookback).some((c) => c.low <= b && c.high >= a);
 }
 
 export function reclaimed(candles: Candle[], level: number, bias: "long" | "short", lookback = 6): boolean {
   const slice = candles.slice(-lookback);
   if (slice.length < 3) return false;
-  const lastC = slice[slice.length - 1]!;
-  if (bias === "long") return slice.some((c) => c.low <= level) && lastC.close > level;
-  return slice.some((c) => c.high >= level) && lastC.close < level;
-}
-
-export function volumeProfile(candles: Candle[], bins = 24) {
-  if (candles.length < 8) return null;
-  let lo = Infinity, hi = -Infinity;
-  for (const c of candles) { lo = Math.min(lo, c.low); hi = Math.max(hi, c.high); }
-  if (!(hi > lo)) return null;
-  const width = (hi - lo) / bins;
-  const vol = new Array(bins).fill(0) as number[];
-  for (const c of candles) {
-    const mid = (c.high + c.low + c.close) / 3;
-    const i = Math.min(bins - 1, Math.max(0, Math.floor((mid - lo) / width)));
-    vol[i] += c.volume || Math.abs(c.close - c.open) || 1;
+  if (bias === "long") {
+    const dipped = slice.some((c) => c.low <= level);
+    const lastC = slice[slice.length - 1]!;
+    return dipped && lastC.close > level;
   }
-  let pocIdx = 0;
-  for (let i = 1; i < bins; i++) if (vol[i]! > vol[pocIdx]!) pocIdx = i;
-  return { poc: lo + (pocIdx + 0.5) * width, hvn: [] as number[], lvn: [] as number[], bins: vol.map((v, i) => ({ price: lo + (i + 0.5) * width, volume: v })) };
+  const tagged = slice.some((c) => c.high >= level);
+  const lastC = slice[slice.length - 1]!;
+  return tagged && lastC.close < level;
 }

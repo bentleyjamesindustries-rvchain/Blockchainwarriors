@@ -17,12 +17,18 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#07080a" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "BW Desk" },
-      { name: "description", content: "Educational crypto paper-trading cockpit for BTC/USD and DOGE/USD. Invalidation first. Not financial advice." },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      {
+        name: "description",
+        content: "Educational crypto paper-trading cockpit for BTC/USD and DOGE/USD. Invalidation first. Not financial advice.",
+      },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap",

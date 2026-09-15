@@ -4,27 +4,78 @@
 @theme {
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+
   --color-background: #07080a;
   --color-foreground: #e6e4dc;
   --color-card: #111318;
   --color-card-foreground: #e6e4dc;
+  --color-popover: #15181e;
+  --color-popover-foreground: #e6e4dc;
   --color-primary: #9aabba;
   --color-primary-foreground: #07080a;
   --color-secondary: #1a1e26;
+  --color-secondary-foreground: #e6e4dc;
+  --color-muted: #1a1e26;
   --color-muted-foreground: #8b9088;
+  --color-accent: #1e242c;
+  --color-accent-foreground: #e6e4dc;
+  --color-destructive: #c45c4a;
+  --color-destructive-foreground: #e6e4dc;
   --color-border: #23282f;
+  --color-input: #23282f;
+  --color-ring: #9aabba;
   --color-long: #3f9d72;
   --color-short: #c45c4a;
   --color-wait: #c4a574;
+  --color-rail: #2a3140;
+
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
   --radius: 0.75rem;
 }
 
 @layer base {
-  html, body, #app {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html,
+  body,
+  #app {
     min-height: 100%;
     background: var(--color-background);
     color: var(--color-foreground);
   }
-  body { font-family: var(--font-sans); }
-  * { border-color: var(--color-border); }
+  body {
+    font-family: var(--font-sans);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  * {
+    border-color: var(--color-border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
